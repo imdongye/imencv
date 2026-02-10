@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(imencv VERSION 0.1.0 LANGUAGES C CXX)
 
-add_executable(imencv main.cpp)
+if(TRUE) # imencv
+    file(GLOB_RECURSE imencv_files "src/*.*")
+    add_executable(imencv ${imencv_files})
+endif()
 
 if(WIN32)
     target_link_libraries(imencv PRIVATE opengl32)
