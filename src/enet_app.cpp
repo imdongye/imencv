@@ -1,6 +1,16 @@
 #include "enet_app.h"
+#include "network_utils.h"
 
-#include <winsock2.h>
+
+EnetApp::EnetApp() : App("ENet Chat App", 1280, 720) {
+    if (enet_initialize() != 0) {
+        fprintf(stderr, "Error: Failed to initialize ENet\n");
+    }
+}
+EnetApp::~EnetApp() {
+    if (host) enet_host_destroy(host);
+    enet_deinitialize();
+}
 
 void EnetApp::on_update() {
     process_network_events();
@@ -12,7 +22,7 @@ void EnetApp::on_update() {
         if (status == AppStatus::IDLE) {
             ImGui::InputInt("포트", &port);
             if (ImGui::Button("서버 시작 (대기 모드)")) {
-                fetch_local_ips(); // 서버 시작 시 내 IP 목록 갱신
+                local_ips = get_local_ips();
                 start_server(port);
             }
             ImGui::Separator();
@@ -76,21 +86,6 @@ void EnetApp::start_server(int p_port) {
     if (host) {
         status = AppStatus::SERVER;
         chat_log.push_back("[시스템] 서버가 열렸습니다.");
-    }
-}
-
-void EnetApp::fetch_local_ips() {
-    local_ips.clear();
-    char hostname[256];
-    if (gethostname(hostname, sizeof(hostname)) == 0) {
-        struct hostent* host_entry = gethostbyname(hostname);
-        if (host_entry != nullptr) {
-            for (int i = 0; host_entry->h_addr_list[i] != nullptr; ++i) {
-                struct in_addr addr;
-                memcpy(&addr, host_entry->h_addr_list[i], sizeof(struct in_addr));
-                local_ips.push_back(inet_ntoa(addr));
-            }
-        }
     }
 }
 
