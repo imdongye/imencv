@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(imencv VERSION 0.1.0 LANGUAGES C CXX)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if(TRUE) # imencv
     file(GLOB_RECURSE imencv_files "src/*.*")
@@ -48,10 +49,15 @@ if(TRUE) # imgui
     target_link_libraries(imencv PRIVATE imgui) 
 endif()
 
+
 if(TRUE) # enet
     add_subdirectory(vendor/enet-1.3.18)
-    target_link_libraries(imencv PRIVATE enet)
     set_target_properties(enet PROPERTIES FOLDER vendor)
+    target_include_directories(imencv PRIVATE vendor/enet-1.3.18/include)
+    target_link_libraries(imencv PRIVATE enet)
+    if(WIN32)
+        target_link_libraries(imencv PRIVATE winmm ws2_32)
+    endif()
 endif()
 
 
