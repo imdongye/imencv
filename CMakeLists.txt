@@ -7,15 +7,15 @@ if(TRUE) # imencv
     add_executable(imencv ${imencv_files})
 endif()
 
-if(WIN32)
-    target_link_libraries(imencv PRIVATE opengl32)
-endif()
 
 if(TRUE) # glad
     file(GLOB_RECURSE glad_files "vendor/glad-4.1-core/*.*")
     add_library(glad STATIC ${glad_files})
     target_include_directories(glad PUBLIC vendor/glad-4.1-core/include)
     set_target_properties(glad PROPERTIES FOLDER vendor)
+    if(WIN32)
+        target_link_libraries(imencv PRIVATE opengl32)
+    endif()
 endif()
 
 if(TRUE) # glfw
