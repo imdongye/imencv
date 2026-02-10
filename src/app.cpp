@@ -54,6 +54,14 @@ void App::init_imgui() {
     io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
     io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
 
+    std::string font_path;
+#ifdef _WIN32
+    font_path = "C:\\Windows\\Fonts\\malgun.ttf";
+#elif __APPLE__
+    font_path = "/System/Library/Fonts/AppFonts/AppleSDGothicNeo.ttc";
+#endif
+    ImFont* font = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 0.0, nullptr, io.Fonts->GetGlyphRangesKorean());
+
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
@@ -73,8 +81,8 @@ void App::update() {
     // ImGui::DockSpaceOverViewport();
 
     {
-        ImGui::Begin("Control Panel");
-        ImGui::Text("test project using imgui enet opencv");
+        ImGui::Begin("한글 테스트");
+        ImGui::Text("test project using imgui enet opencv by 임동예");
         if (ImGui::Button("Toggle Demo Window")) {
             show_demo_window = !show_demo_window;
         }
