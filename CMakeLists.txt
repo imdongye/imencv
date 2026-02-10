@@ -48,6 +48,12 @@ if(TRUE) # imgui
     target_link_libraries(imencv PRIVATE imgui) 
 endif()
 
+if(TRUE) # enet
+    add_subdirectory(vendor/enet-1.3.18)
+    target_link_libraries(imencv PRIVATE enet)
+    set_target_properties(enet PROPERTIES FOLDER vendor)
+endif()
+
 
 if(TRUE) # OpenCV
     # on
