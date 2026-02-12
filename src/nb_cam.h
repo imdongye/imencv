@@ -8,8 +8,11 @@
 // Non-Blocking Ring Buffer USB Camera
 class NbCam {
 public:
-    static std::vector<std::string> get_cam_list();
-    static std::vector<std::array<int, 3>> get_cam_option(int p_id); // array => width, height, fps
+    struct DeviceInfo {
+        std::string name;
+        std::vector<std::array<int, 3>> options; // {width, height, fps}
+    }
+    static std::vector<DeviceInfo> get_device_infos();
 public:
     NbCam();
     ~NbCam();

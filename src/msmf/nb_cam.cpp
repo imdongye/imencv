@@ -17,8 +17,81 @@
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "turbojpeg.lib")
 
-std::vector<std::string> NbCam::get_cam_list() {
-    return {}; 
+std::vector<NbCam::DeviceInfo> NbCam::get_device_infos() {
+    std::vector<DeviceInfo> infos;
+    HRESULT hr;
+    IMFAttributes* pAttributes = nullptr;
+    IMFActivate** ppDevices = nullptr;
+    UINT32 nrDevices = 0;
+
+    // init msmf
+    if( CoInitializeEx(nullptr, COINIT_MULTITHREADED)<0 ) {
+        return infos;
+    }
+    if( MFStartup(MF_VERSION)<0 ) {
+        CoUninitialize();
+        return infos;
+    }
+
+    // set device type to video capture
+    MFCreateAttributes(&pAttributes, 1);
+    pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+
+    // enumerate devices
+    hr = MFCreateDeviceSources(pAttributes, &ppDevices, &nrDevices);
+    mf_release(pAttributes);
+    if( hr<0 ) {
+        MFShutdown();
+        CoUninitialize();
+        return infos;
+    }
+    for( UINT32 i=0; i<nrDevices; i++ ) {
+        DeviceInfo info;
+        
+        // get friendly name
+        WCHAR* pName = nullptr;
+        if( ppDevices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &pName, nullptr)>=0 ) {
+            int size = WideCharToMultiByte(CP_UTF8, 0, pName, -1, nullptr, 0, nullptr, nullptr);
+            info.name.assign(size - 1, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, pName, -1, &info.name[0], size, nullptr, nullptr);
+            CoTaskMemFree(pName);
+        }
+
+        // get options (mjpeg only)
+        IMFMediaSource* pSource = nullptr;
+        if( ppDevices[i]->ActivateObject(IID_PPV_ARGS(&pSource))>=0 ) {
+            IMFSourceReader* pReader = nullptr;
+            if( MFCreateSourceReaderFromMediaSource(pSource, nullptr, &pReader)>=0 ) {
+                DWORD dwIdx = 0;
+                IMFMediaType* pType = nullptr;
+                while( pReader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, dwIdx++, &pType)>=0 ) {
+                    GUID subType;
+                    pType->GetGUID(MF_MT_SUBTYPE, &subType);
+                    if( subType==MFVideoFormat_MJPG ) {
+                        UINT32 w, h, fps_num, fps_den;
+                        MFGetAttributeSize(pType, MF_MT_FRAME_SIZE, &w, &h);
+                        MFGetAttributeRatio(pType, MF_MT_FRAME_RATE, &fps_num, &fps_den);
+                        int fps = (fps_den>0) ? (fps_num/fps_den) : 0;
+                        info.options.push_back({(int)w, (int)h, fps});
+                    }
+                    mf_release(pType);
+                }
+                // sort and remove duplicates
+                std::sort(info.options.begin(), info.options.end());
+                info.options.erase(std::unique(info.options.begin(), info.options.end()), info.options.end());
+                mf_release(pReader);
+            }
+            mf_release(pSource);
+        }
+        
+        infos.push_back(info);
+        mf_release(ppDevices[i]);
+    }
+    CoTaskMemFree(ppDevices);
+
+    MFShutdown();
+    CoUninitialize();
+    return infos;
 }
 
 std::vector<std::array<int, 3>> NbCam::get_cam_option(int p_id) {
