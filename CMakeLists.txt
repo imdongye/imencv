@@ -85,6 +85,7 @@ if(TRUE) # OpenCV
     set(BUILD_opencv_js_bindings_generator      OFF CACHE BOOL "" FORCE)
     set(WITH_VTK                                OFF CACHE BOOL "" FORCE)
     set(WITH_GSTREAMER                          OFF CACHE BOOL "" FORCE)
+    set(WITH_AVIF                               OFF CACHE BOOL "" FORCE)
     set(BUILD_WEBP                              OFF CACHE BOOL "" FORCE)
     set(WITH_WEBP                               OFF CACHE BOOL "" FORCE)
     set(WITH_OPENEXR                            OFF CACHE BOOL "" FORCE)
